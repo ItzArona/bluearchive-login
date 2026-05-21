@@ -6,9 +6,25 @@ import AuthForm from '@/components/form/AuthForm.vue'
 
 <template>
   <div class="auth-page">
-    <div class="auth-page__halo auth-page__halo--blue" />
-    <div class="auth-page__halo auth-page__halo--pink" />
+    <!-- Video background -->
+    <video
+      class="auth-page__video"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="/bg.jpg"
+    >
+      <source src="/bg-video.mp4" type="video/mp4">
+    </video>
+    <div class="auth-page__video-overlay" />
 
+    <!-- Floating particles -->
+    <div class="auth-page__particles">
+      <span v-for="i in 6" :key="i" class="particle" :style="{ '--i': i }" />
+    </div>
+
+    <!-- Main container -->
     <div class="auth-page__container">
       <aside class="auth-page__left">
         <div class="auth-page__left-inner">
@@ -35,52 +51,123 @@ import AuthForm from '@/components/form/AuthForm.vue'
   overflow: hidden;
 }
 
-.auth-page__halo {
-  position: absolute;
-  border-radius: 50%;
+/* Video background */
+.auth-page__video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.auth-page__video-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(18, 138, 250, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(254, 147, 199, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Floating particles (cross-shaped, BA signature) */
+.auth-page__particles {
+  position: fixed;
+  inset: 0;
   pointer-events: none;
-  animation: drift 30s linear infinite;
+  z-index: 0;
 }
 
-.auth-page__halo--blue {
-  width: 800px;
-  height: 800px;
-  top: -300px;
-  right: -200px;
-  background: radial-gradient(circle, var(--ba-blue-50) 0%, transparent 70%);
-  opacity: 0.7;
+.particle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  animation: particleFloat 8s calc(var(--i) * 1.2s) infinite;
 }
 
-.auth-page__halo--pink {
-  width: 600px;
-  height: 600px;
-  bottom: -200px;
-  left: -150px;
-  background: radial-gradient(circle, rgba(254, 147, 199, 0.15) 0%, transparent 70%);
-  opacity: 0.6;
-  animation-direction: reverse;
-  animation-duration: 25s;
+.particle::before,
+.particle::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--r-pill);
 }
 
+.particle::before {
+  width: 2px;
+  height: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.particle::after {
+  width: 100%;
+  height: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.particle:nth-child(1) { left: 15%; top: 20%; }
+.particle:nth-child(2) { left: 70%; top: 15%; }
+.particle:nth-child(3) { left: 85%; top: 60%; }
+.particle:nth-child(4) { left: 25%; top: 75%; }
+.particle:nth-child(5) { left: 55%; top: 85%; }
+.particle:nth-child(6) { left: 90%; top: 35%; }
+
+@keyframes particleFloat {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 0.8; }
+  50% { opacity: 0.6; transform: translateY(-30px) scale(1); }
+  80% { opacity: 0.3; }
+}
+
+/* Container with glass effect */
 .auth-page__container {
   position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 1fr;
   width: 100%;
-  max-width: 1100px;
-  min-height: 580px;
-  background: var(--paper);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
+  max-width: 1000px;
+  min-height: 560px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  box-shadow:
+    0 32px 64px -16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  animation: slideUp 0.5s var(--ease-out);
+  animation: containerReveal 0.8s var(--ease-out) both;
 }
 
+@keyframes containerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Left side with image */
 .auth-page__left {
   position: relative;
   background: url('/bg.jpg') center / cover no-repeat;
   display: flex;
   align-items: flex-end;
+}
+
+.auth-page__left::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
 }
 
 .auth-page__left-inner {
@@ -90,39 +177,50 @@ import AuthForm from '@/components/form/AuthForm.vue'
   width: 100%;
 }
 
+/* Right side form */
 .auth-page__right {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: var(--sp-8) var(--sp-6);
+  background: rgba(255, 255, 255, 0.95);
 }
 
-/* Responsive: tablet */
+@media (prefers-color-scheme: dark) {
+  .auth-page__right {
+    background: rgba(17, 22, 42, 0.92);
+  }
+}
+
+/* Tablet */
 @media (max-width: 1024px) and (min-width: 768px) {
   .auth-page__container {
     grid-template-columns: 1fr;
-    max-width: 500px;
+    max-width: 460px;
   }
 
   .auth-page__left {
     display: none;
   }
+
+  .auth-page__right {
+    border-radius: 24px;
+  }
 }
 
-/* Responsive: mobile */
+/* Mobile */
 @media (max-width: 767px) {
   .auth-page {
     padding: var(--sp-3);
-    background: url('/bg.jpg') center / cover no-repeat fixed;
+    align-items: flex-start;
+    padding-top: 10vh;
   }
 
   .auth-page__container {
     grid-template-columns: 1fr;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    max-width: 420px;
-    min-height: auto;
+    max-width: 400px;
+    border-radius: 20px;
   }
 
   .auth-page__left {
@@ -133,16 +231,8 @@ import AuthForm from '@/components/form/AuthForm.vue'
     padding: var(--sp-6) var(--sp-5);
   }
 
-  .auth-page__halo {
+  .auth-page__particles {
     display: none;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  @media (max-width: 767px) {
-    .auth-page__container {
-      background: rgba(17, 22, 42, 0.92);
-    }
   }
 }
 </style>

@@ -3,8 +3,7 @@
 
 <template>
   <div class="brand-mark">
-    <span class="brand-mark__icon">BA</span>
-    <span class="brand-mark__text">BlueArchive</span>
+    <img src="/ba-logo.png" alt="Blue Archive" class="brand-mark__logo" />
   </div>
 </template>
 
@@ -12,27 +11,31 @@
 .brand-mark {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-6);
-}
-
-.brand-mark__icon {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm);
-  background: var(--ba-blue-500);
-  color: white;
-  font-weight: 700;
-  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-5);
+  animation: brandFloat 0.6s 0.2s var(--ease-out) both;
 }
 
-.brand-mark__text {
-  font-size: var(--fs-lg);
-  font-weight: 600;
-  color: var(--ink-900);
-  letter-spacing: 0.5px;
+@keyframes brandFloat {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.brand-mark__logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(18, 138, 250, 0.3));
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.brand-mark__logo:hover {
+  transform: scale(1.1) rotate(-3deg);
 }
 </style>
