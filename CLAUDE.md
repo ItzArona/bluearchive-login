@@ -4,32 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-蔚蓝档案（BlueArchive）主题的登录/注册页面 — a static, single-page frontend made of three files (`index.html`, `style.css`, `script.js`) plus `bg.jpg`. There is no build system, package manager, or test suite. To preview, open `index.html` directly in a browser, or serve the directory with any static server (e.g. `python -m http.server`).
+蔚蓝档案（BlueArchive）主题的登录/注册页面，当前为一个基于 **Vue + Vite + TypeScript** 的前端项目，并带有 **Vitest** 测试支持。不要再把这个仓库当作只有 `index.html`、`style.css`、`script.js` 的静态三文件页面；旧的静态实现说明如果仍需保留，应视为历史资料并迁移到 `_legacy/` 下以免误导贡献者。
+
+使用仓库中定义的 package-manager scripts 进行本地开发、构建与测试，而不是直接打开 `index.html`。如需查看准确命令，请以 `package.json` 中的 scripts 为准。
 
 ## Architecture
 
-The whole app is a single HTML page that toggles between two modes (登录 / 注册) inside one `<form id="authForm">`. Several concepts run on top of this single form and are only loosely separated:
+该项目现在采用组件化前端架构：
 
-- **Form-mode toggle** (`script.js:32-80`): Clicking `#toggleForm` runs an opacity/transform exit animation (~300ms), then `toggleFormContent()` flips `isLoginForm`, swaps title/button text, shows/hides the email + verification-code + terms-agreement groups, and re-runs `initializeFormHandling()`. The email / code / terms inputs live in the same form but are toggled via inline `display` styles — they are not separate forms.
-
-- **Submit handler reattachment** (`script.js:295-363`): `handleSubmit` is stored in a module-level `let` so that each `toggleFormContent()` can remove the previous listener and add a new one. This is intentional — the closure captures the current `isLoginForm` value. If you refactor, preserve the remove-then-add pattern or the listener will be bound to a stale mode.
-
-- **Submit target**: `fetch(window.location.href, { method: 'POST', body: formData })` posts back to whatever URL serves the page. On `data.success` it redirects to `/user.php`. The frontend is designed to be dropped into a PHP (or any server-side) host that handles `action=login` / `action=register` form fields. Do not assume a specific backend exists in this repo — there isn't one.
-
-- **Verification-code countdown** (`script.js:82-148`): A 60-second countdown is persisted in `localStorage.codeCountdown` as an absolute end-timestamp, so the cooldown survives page reloads. The page-load handler at line 128 rehydrates the timer. Two independent `setInterval`s exist (click-time and load-time) — keep them in sync if you change the duration or storage key.
-
-- **Theming** (`script.js:175-252`): Color choices are stored in `localStorage.themeColor`. `applyThemeColor()` sets `--theme-color` on `:root` AND appends a fresh `<style>` element each call with `!important` overrides for buttons/links. Repeated theme changes append more `<style>` tags — be aware that style sheets accumulate; the latest one wins by cascade order. Some selectors in `style.css` use `var(--theme-color)` directly while others are overridden by the injected `<style>`. Both paths must be updated when adding theme-aware elements.
-
-- **Dark mode**: Toggled via `body.dark-mode` class, persisted in `localStorage.darkMode`. All dark-mode rules live in `style.css` under `.dark-mode ...` selectors.
-
-- **Responsive layout** (`script.js:17-30`, `style.css:103-126`): Below 768px, JS hides `.left-side` and copies its background-image to `body`. The `@media (max-width: 767px)` block in CSS does the same thing declaratively. Both mechanisms are active simultaneously — changes to the breakpoint must be made in both places.
-
-- **Custom alerts** (`script.js:371-425`): `showAlert(title, message, type)` appends to `#alertContainer` with stacked transitions. Hover pauses the auto-dismiss timer.
-
-- **localStorage keys** used across the app: `codeCountdown`, `themeColor`, `darkMode`, `rememberedUsername`, `rememberedPassword`, `rememberMe`. Note that password is stored in plaintext when "记住我" is checked — flag this if the user is hardening the page.
+- **Vue application**: UI 由 Vue 组件构成，而不是单个 HTML 页面上的手写 DOM 操作。修改界面行为时，优先在组件状态、事件处理和模板结构中查找实现。
+- **Vite toolchain**: 本地开发、生产构建和静态资源处理由 Vite 管理。不要添加依赖于“直接打开 HTML 文件”的工作流说明。
+- **TypeScript codebase**: 新增或修改逻辑时应保持类型信息完整，优先复用已有类型、props、emits、composables 和工具函数定义。
+- **Vitest coverage**: 仓库现在有测试能力。修改交互逻辑、状态变更或工具函数时，应同步更新或新增 Vitest 测试。
 
 ## Notes for editing
 
-- All UI text is Chinese. Keep new copy consistent with the existing tone (e.g. quote-box text on the left panel).
-- The repo has no linter or formatter configured. Match the existing style: 4-space indent in JS/CSS/HTML, double quotes in HTML, single quotes in JS.
+- All UI text is Chinese. Keep new copy consistent with the existing tone.
+- Prefer project conventions already established in the Vue/TypeScript code over legacy plain-JS patterns.
+- When documenting workflows, reference the Vite/package-manager workflow and test scripts rather than static-file preview instructions.
 - README screenshots are hosted on `blog.xiaoy.asia` — do not try to fetch or modify them.
