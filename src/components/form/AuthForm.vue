@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import TextField from '@/components/form/TextField.vue'
 import CodeField from '@/components/form/CodeField.vue'
 import Checkbox from '@/components/form/Checkbox.vue'
@@ -28,26 +28,13 @@ const {
 const { remaining, isCounting, start: startCountdown } = useCodeCountdown(() => email.value)
 const toast = useToast()
 
-const transitioning = ref(false)
-const formRef = ref<HTMLElement | null>(null)
-
 const modeLabel = computed(() => isLogin.value ? '登录' : '注册')
 const toggleLabel = computed(() => isLogin.value ? '没有账号？立即注册' : '已有账号？返回登录')
 
 onMounted(initFromStorage)
 
 function onToggleMode() {
-  if (transitioning.value) return
-  transitioning.value = true
-
-  setTimeout(() => {
-    toggleMode()
-    nextTick(() => {
-      setTimeout(() => {
-        transitioning.value = false
-      }, 30)
-    })
-  }, 300)
+  toggleMode()
 }
 
 async function onRequestCode() {
@@ -74,16 +61,12 @@ function onSubmit(e: Event) {
 
 <template>
   <div class="auth-form-wrapper">
-    <div
-      ref="formRef"
-      class="auth-form"
-      :class="{
-        'auth-form--exit': transitioning,
-      }"
-    >
-      <!-- Title with animated underline -->
+    <div class="auth-form">
+      <!-- Title: crossfade text -->
       <h1 class="auth-form__title">
-        <span class="auth-form__title-text">{{ modeLabel }}</span>
+        <Transition name="title-fade" mode="out-in">
+          <span :key="modeLabel" class="auth-form__title-text">{{ modeLabel }}</span>
+        </Transition>
         <span class="auth-form__title-line" />
       </h1>
 
@@ -107,51 +90,53 @@ function onSubmit(e: Event) {
           @blur="() => validateField('password', password)"
         />
 
-        <!-- Register fields with smooth expand -->
-        <Transition name="fields">
-          <div v-if="!isLogin" class="auth-form__register-fields">
-            <div class="auth-form__register-inner">
-              <TextField
-                v-model="email"
-                label="邮箱"
-                name="email"
-                type="email"
-                autocomplete="email"
-                :error="errors.email"
-                @blur="() => validateField('email', email)"
-              />
+        <!-- Register fields: smooth grid expand/collapse -->
+        <div class="auth-form__expandable" :class="{ expanded: !isLogin }">
+          <div class="auth-form__expandable-inner">
+            <TextField
+              v-model="email"
+              label="邮箱"
+              name="email"
+              type="email"
+              autocomplete="email"
+              :error="errors.email"
+              @blur="() => validateField('email', email)"
+            />
 
-              <CodeField
-                v-model="code"
-                :email="email"
-                :error="errors.code"
-                :is-counting="isCounting"
-                :remaining="remaining"
-                @blur="() => validateField('code', code)"
-                @request-code="onRequestCode"
-              />
+            <CodeField
+              v-model="code"
+              :email="email"
+              :error="errors.code"
+              :is-counting="isCounting"
+              :remaining="remaining"
+              @blur="() => validateField('code', code)"
+              @request-code="onRequestCode"
+            />
 
-              <Checkbox
-                v-model="agreeTerms"
-                name="agreeTerms"
-                label="我已阅读并同意服务条款"
-                :error="errors.agreeTerms"
-              >
+            <Checkbox
+              v-model="agreeTerms"
+              name="agreeTerms"
+              label="我已阅读并同意服务条款"
+              :error="errors.agreeTerms"
+            >
               我已阅读并同意
               <a href="https://docs.xiaoy.asia/" target="_blank" rel="noopener noreferrer">服务条款</a>
               和
               <a href="https://docs.xiaoy.asia/" target="_blank" rel="noopener noreferrer">隐私政策</a>
             </Checkbox>
-            </div>
           </div>
-        </Transition>
+        </div>
 
-        <Checkbox
-          v-if="isLogin"
-          v-model="rememberUser"
-          name="rememberUser"
-          label="记住账号"
-        />
+        <!-- Remember me: smooth grid expand/collapse -->
+        <div class="auth-form__expandable" :class="{ expanded: isLogin }">
+          <div class="auth-form__expandable-inner">
+            <Checkbox
+              v-model="rememberUser"
+              name="rememberUser"
+              label="记住账号"
+            />
+          </div>
+        </div>
 
         <SubmitButton :loading="loading">
           {{ modeLabel }}
@@ -169,29 +154,19 @@ function onSubmit(e: Event) {
 .auth-form-wrapper {
   width: 100%;
   max-width: 360px;
-  perspective: 1200px;
 }
 
 .auth-form {
   width: 100%;
-  transition: opacity 0.3s var(--ease-out);
   animation: formEnter 0.5s 0.3s var(--ease-out) both;
 }
 
-.auth-form--exit {
-  opacity: 0;
-}
-
 @keyframes formEnter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Title */
+/* Title with crossfade */
 .auth-form__title {
   position: relative;
   margin-bottom: var(--sp-6);
@@ -199,6 +174,7 @@ function onSubmit(e: Event) {
 }
 
 .auth-form__title-text {
+  display: inline-block;
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--ink-900);
@@ -213,40 +189,37 @@ function onSubmit(e: Event) {
   height: 3px;
   border-radius: var(--r-pill);
   background: linear-gradient(90deg, var(--ba-blue-500), var(--ba-yellow));
-  animation: lineExpand 0.6s 0.5s var(--ease-spring) both;
 }
 
-@keyframes lineExpand {
-  from { width: 0; opacity: 0; }
-  to { width: 48px; opacity: 1; }
+.title-fade-enter-active,
+.title-fade-leave-active {
+  transition: all 0.25s var(--ease-out);
 }
 
-/* Register fields transition */
-.auth-form__register-fields {
+.title-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.title-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* Expandable sections using grid rows */
+.auth-form__expandable {
   display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--ease-out);
+}
+
+.auth-form__expandable.expanded {
   grid-template-rows: 1fr;
 }
 
-.auth-form__register-inner {
+.auth-form__expandable-inner {
   overflow: hidden;
   min-height: 0;
-}
-
-.fields-enter-active,
-.fields-leave-active {
-  transition: grid-template-rows 0.5s var(--ease-out), opacity 0.4s var(--ease-out);
-}
-
-.fields-enter-from,
-.fields-leave-to {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-
-.fields-enter-to,
-.fields-leave-from {
-  grid-template-rows: 1fr;
-  opacity: 1;
 }
 
 /* Toggle button */
