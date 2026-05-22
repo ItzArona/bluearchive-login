@@ -7,6 +7,8 @@ import type {
   CodeResponse,
 } from '@/types/api'
 
+// password_hash 是客户端 SHA-256 预哈希，后端必须使用 bcrypt/argon2 二次哈希后再存储
+
 export function login(payload: LoginRequest): Promise<AuthResponse> {
   return http<AuthResponse>('/auth/login', {
     method: 'POST',

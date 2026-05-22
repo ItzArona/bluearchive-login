@@ -14,7 +14,7 @@
 - **深度 BA 风视觉** — Halo 光晕背景、斜切几何线、3D 高光按钮、黄色竖条标题
 - **Vue 3 + TypeScript** — Composition API、`<script setup>`、strict 类型
 - **对接独立 REST JSON API** — 登录 / 注册 / 验证码三端点，token 存内存 + 一次性 ticket 跳转
-- **安全优先** — 前端 SHA-256 hash 密码、"记住账号"仅存用户名、不持久化 token
+- **安全优先** — 前端 SHA-256 hash 密码（后端仍需 bcrypt/argon2 二次哈希存储）、"记住账号"仅存用户名、不持久化 token
 - **Zod 校验** — lazy → eager 策略，后端字段错误映射到具体输入框
 - **暗色模式** — 随系统 `prefers-color-scheme`，无需手动切换
 - **响应式三档** — 桌面双栏 / 平板单栏 / 移动端半透明卡片
@@ -70,7 +70,7 @@ npx vue-tsc --noEmit  # 类型检查
 | 语言 | TypeScript (strict) |
 | 状态 | Pinia |
 | 校验 | Zod |
-| 图标 | Lucide Vue Next |
+| 图标 | 内联 SVG (icons.svg) |
 | 字体 | Noto Sans SC |
 | 测试 | Vitest |
 | CSS | 手写 + CSS 变量 tokens |
@@ -98,7 +98,7 @@ src/
 - `POST /api/auth/code` — 发送邮箱验证码
 - `GET /api/auth/exchange?ticket=xxx` — 外部页面用一次性 ticket 换 session
 
-详见 [plan 文档](.claude/plans/cozy-scribbling-boot.md) 中的完整契约定义。
+详见上方 API 端点说明。
 
 ## 许可证
 

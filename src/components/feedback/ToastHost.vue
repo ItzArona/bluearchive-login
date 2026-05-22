@@ -1,29 +1,44 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useToast, type ToastItem } from '@/composables/useToast'
+import { useToast } from '@/composables/useToast'
 
 const { toasts, dismiss } = useToast()
 
-const timers = ref<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+interface TimerState {
+  timer: ReturnType<typeof setTimeout>
+  startedAt: number
+  remaining: number
+}
 
-function startTimer(id: number) {
+const timers = ref<Map<number, TimerState>>(new Map())
+
+function startTimer(id: number, duration = 4000) {
   const timer = setTimeout(() => {
     dismiss(id)
     timers.value.delete(id)
-  }, 4000)
-  timers.value.set(id, timer)
+  }, duration)
+  timers.value.set(id, { timer, startedAt: Date.now(), remaining: duration })
 }
 
 function pauseTimer(id: number) {
-  const timer = timers.value.get(id)
-  if (timer) {
-    clearTimeout(timer)
-    timers.value.delete(id)
+  const state = timers.value.get(id)
+  if (state) {
+    clearTimeout(state.timer)
+    const elapsed = Date.now() - state.startedAt
+    state.remaining = Math.max(0, state.remaining - elapsed)
   }
 }
 
 function resumeTimer(id: number) {
-  startTimer(id)
+  const state = timers.value.get(id)
+  if (state) {
+    const timer = setTimeout(() => {
+      dismiss(id)
+      timers.value.delete(id)
+    }, state.remaining)
+    state.timer = timer
+    state.startedAt = Date.now()
+  }
 }
 
 watch(toasts, (items) => {

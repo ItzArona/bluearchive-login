@@ -53,6 +53,8 @@ export function useAuthForm() {
   }
 
   async function submit() {
+    if (loading.value) return
+
     const data = isLogin.value
       ? { username: username.value, password: password.value }
       : {
@@ -97,8 +99,11 @@ export function useAuthForm() {
 
         const redirect = res.redirect_url || import.meta.env.VITE_AFTER_LOGIN_URL || '/'
         const ticket = res.handoff_ticket
+        const target = `${redirect}${redirect.includes('?') ? '&' : '?'}ticket=${ticket}`
+        sessionStorage.setItem('pendingRedirect', target)
         setTimeout(() => {
-          window.location.href = `${redirect}${redirect.includes('?') ? '&' : '?'}ticket=${ticket}`
+          sessionStorage.removeItem('pendingRedirect')
+          window.location.href = target
         }, 1000)
       } else {
         toast.error(res.message)

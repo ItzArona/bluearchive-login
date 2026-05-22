@@ -1,9 +1,9 @@
 import { ref, type Ref } from 'vue'
-import type { ZodObject, ZodRawShape } from 'zod'
+import type { z } from 'zod'
 
 export type FieldErrors = Record<string, string | undefined>
 
-export function useFormValidation<T extends ZodRawShape>(schema: ZodObject<T>) {
+export function useFormValidation(schema: z.ZodObject) {
   const errors: Ref<FieldErrors> = ref({})
   const hasSubmitted = ref(false)
 
@@ -29,7 +29,7 @@ export function useFormValidation<T extends ZodRawShape>(schema: ZodObject<T>) {
     if (!hasSubmitted.value) return
     const fieldSchema = schema.shape[field]
     if (!fieldSchema) return
-    const result = fieldSchema.safeParse(value)
+    const result = (fieldSchema as z.ZodType).safeParse(value)
     if (result.success) {
       errors.value = { ...errors.value, [field]: undefined }
     } else {

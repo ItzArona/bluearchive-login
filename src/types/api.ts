@@ -51,12 +51,13 @@ export type CodeErrorResponse = {
 export type CodeResponse = CodeSuccessResponse | CodeErrorResponse
 
 export class ApiError extends Error {
-  constructor(
-    public readonly code: string,
-    message: string,
-    public readonly status?: number,
-  ) {
+  readonly code: string
+  readonly status?: number
+
+  constructor(code: string, message: string, status?: number) {
     super(message)
     this.name = 'ApiError'
+    this.code = code
+    this.status = status
   }
 }

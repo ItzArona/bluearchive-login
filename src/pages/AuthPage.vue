@@ -13,6 +13,7 @@ import AuthForm from '@/components/form/AuthForm.vue'
       muted
       loop
       playsinline
+      preload="none"
       poster="/bg.jpg"
     >
       <source src="/bg-video.mp4" type="video/mp4">
